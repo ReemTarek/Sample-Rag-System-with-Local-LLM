@@ -1,0 +1,20 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+backend/**/uploads/
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+
+# Qdrant data
+qdrant_storage/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
