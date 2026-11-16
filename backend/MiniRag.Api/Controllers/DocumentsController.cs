@@ -27,9 +27,20 @@ public sealed class DocumentsController(
             return BadRequest(new { error = "Unsupported file type. Upload a .pdf, .docx or .txt file." });
 
         var doc = registry.Add(fileName);
-        Directory.CreateDirectory(indexing.UploadDirectory);
-        await using (var target = System.IO.File.Create(indexing.FilePathFor(doc.Id, fileName)))
+        var path = indexing.FilePathFor(doc.Id, fileName);
+        try
+        {
+            Directory.CreateDirectory(indexing.UploadDirectory);
+            await using var target = System.IO.File.Create(path);
             await file.CopyToAsync(target, ct);
+        }
+        catch
+        {
+            // Client disconnected or disk error: don't leave a document that is Pending forever.
+            registry.Remove(doc.Id);
+            TryDeleteFile(path);
+            throw;
+        }
 
         indexing.QueueIndexing(doc.Id, fileName);
         return Accepted(doc);
@@ -42,13 +53,31 @@ public sealed class DocumentsController(
         if (doc is null)
             return NotFound();
 
-        registry.Remove(id);
+        // Vectors first: if Qdrant is unavailable the document stays listed so the user can retry,
+        // instead of vanishing from the list while its chunks keep being searched and cited.
         if (initializer.IsReady)
-            await store.DeleteDocumentAsync(id, ct);
+        {
+            try
+            {
+                await store.DeleteDocumentAsync(id, ct);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(StatusCodes.Status502BadGateway,
+                    new { error = $"Could not remove the document from the vector store: {ex.Message}" });
+            }
+        }
 
-        var path = indexing.FilePathFor(id, doc.FileName);
-        if (System.IO.File.Exists(path))
-            System.IO.File.Delete(path);
+        registry.Remove(id);
+        TryDeleteFile(indexing.FilePathFor(id, doc.FileName));
         return NoContent();
+    }
+
+    /// <summary>The indexer may still hold the file open (Windows); an orphaned upload is harmless.</summary>
+    private static void TryDeleteFile(string path)
+    {
+        try { System.IO.File.Delete(path); }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
     }
 }

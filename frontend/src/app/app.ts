@@ -73,7 +73,11 @@ export class App implements OnInit, OnDestroy {
   }
 
   protected remove(doc: DocumentDto): void {
-    this.api.deleteDocument(doc.id).subscribe(() => this.refresh());
+    this.uploadError.set(null);
+    this.api.deleteDocument(doc.id).subscribe({
+      next: () => this.refresh(),
+      error: (e: HttpErrorResponse) => this.uploadError.set(e.error?.error ?? 'Delete failed.'),
+    });
   }
 
   protected ask(): void {

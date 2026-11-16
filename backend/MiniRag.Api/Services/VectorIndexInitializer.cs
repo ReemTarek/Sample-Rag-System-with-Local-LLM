@@ -56,11 +56,16 @@ public sealed class VectorIndexInitializer(
             EmbeddingDimension = dimension;
             LastError = null;
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested) // a cancelled caller still propagates
         {
-            LastError = ex is HttpRequestException { HttpRequestError: HttpRequestError.ConnectionError }
-                ? $"Cannot connect to a backing service: {ex.Message} Is Ollama running and Qdrant started (docker compose up -d)?"
-                : ex.Message;
+            LastError = ex switch
+            {
+                HttpRequestException { HttpRequestError: HttpRequestError.ConnectionError } =>
+                    $"Cannot connect to a backing service: {ex.Message} Is Ollama running and Qdrant started (docker compose up -d)?",
+                OperationCanceledException =>
+                    "Timed out waiting for Ollama or Qdrant. Is the model still loading? Try again, or raise Ollama:TimeoutSeconds.",
+                _ => ex.Message,
+            };
             throw new ServiceNotReadyException(LastError, ex);
         }
         finally
