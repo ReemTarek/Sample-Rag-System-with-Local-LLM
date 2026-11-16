@@ -23,6 +23,7 @@ public sealed class HealthController(OllamaClient ollama, QdrantVectorStore stor
             embedAvailable = OllamaClient.HasModel(models, ollama.EmbeddingModel);
         }
         catch (HttpRequestException) { }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested) { } // HttpClient timeout
 
         // Also (re)tries initialization, so this endpoint doubles as "is the pipeline usable now?".
         try { await initializer.EnsureReadyAsync(ct); }

@@ -22,6 +22,15 @@ public sealed class ChatController(RagService rag) : ControllerBase
         {
             return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = ex.Message });
         }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            // Not the client giving up: an HttpClient timeout talking to Ollama or Qdrant.
+            return StatusCode(StatusCodes.Status504GatewayTimeout, new
+            {
+                error = "Ollama or Qdrant did not respond in time. The model may still be loading; try again, " +
+                        "or raise Ollama:TimeoutSeconds.",
+            });
+        }
         catch (HttpRequestException ex)
         {
             return StatusCode(StatusCodes.Status502BadGateway, new { error = ex.Message });
