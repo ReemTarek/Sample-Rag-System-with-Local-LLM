@@ -81,15 +81,36 @@ public sealed class DocumentIndexingService(
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
             registry.MarkFailed(documentId, "Indexing cancelled because the server is shutting down.");
+            await RemovePartialVectorsAsync(documentId);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Indexing {File} failed", fileName);
             registry.MarkFailed(documentId, ex.Message);
+            await RemovePartialVectorsAsync(documentId);
         }
         finally
         {
             _oneAtATime.Release();
+        }
+    }
+
+    /// <summary>
+    /// Batches are stored as they are embedded, so a failure part-way leaves some chunks in Qdrant. Remove
+    /// them, otherwise a "Failed" document stays searchable and reappears as "Indexed" after a restart.
+    /// Best effort: if Qdrant itself is the problem the cleanup fails too, and we only log it.
+    /// </summary>
+    private async Task RemovePartialVectorsAsync(string documentId)
+    {
+        try
+        {
+            using var scope = scopeFactory.CreateScope();
+            var store = scope.ServiceProvider.GetRequiredService<QdrantVectorStore>();
+            await store.DeleteDocumentAsync(documentId, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Could not remove partially indexed vectors for document {DocumentId}", documentId);
         }
     }
 }
