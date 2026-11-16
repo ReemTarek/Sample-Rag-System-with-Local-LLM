@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/MiniRag.Api/MiniRag.Api.csproj" />
+    <Project Path="backend/MiniRag.Tests/MiniRag.Tests.csproj" />
+  </Folder>
+</Solution>

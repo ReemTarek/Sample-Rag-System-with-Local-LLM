@@ -1,0 +1,74 @@
+<main>
+  <h1>Mini RAG <small>local Ollama + Qdrant</small></h1>
+
+  <section>
+    <h2>Documents</h2>
+    <label class="upload">
+      <input type="file" accept=".pdf,.docx,.txt" (change)="onFileSelected($event)" [disabled]="uploading()" />
+      @if (uploading()) { <span>Uploading…</span> }
+    </label>
+    @if (uploadError()) { <p class="error">{{ uploadError() }}</p> }
+
+    @if (documents().length === 0) {
+      <p class="muted">No documents yet. Upload a PDF, DOCX or TXT file.</p>
+    } @else {
+      <table>
+        <thead><tr><th>File</th><th>Status</th><th>Chunks</th><th></th></tr></thead>
+        <tbody>
+          @for (doc of documents(); track doc.id) {
+            <tr>
+              <td>{{ doc.fileName }}</td>
+              <td>
+                <span class="status" [class]="doc.status.toLowerCase()">{{ doc.status }}</span>
+                @if (doc.error) { <div class="error small">{{ doc.error }}</div> }
+              </td>
+              <td>{{ doc.status === 'Indexed' ? doc.chunkCount : '' }}</td>
+              <td><button type="button" (click)="remove(doc)">Delete</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <section>
+    <h2>Ask</h2>
+    @for (turn of turns(); track $index) {
+      <div class="turn">
+        <p class="question">{{ turn.question }}</p>
+        @if (turn.response; as r) {
+          <p class="answer" [class.insufficient]="r.insufficientContext">{{ r.answer }}</p>
+          @if (r.citations.length) {
+            <ul class="citations">
+              @for (c of r.citations; track c.sourceNumber) {
+                <li>
+                  <details>
+                    <summary>
+                      [{{ c.sourceNumber }}] {{ c.documentName }}
+                      @if (c.pageNumber) { · page {{ c.pageNumber }} }
+                      · chunk {{ c.chunkIndex }} · score {{ c.score }}
+                    </summary>
+                    <blockquote>{{ c.snippet }}</blockquote>
+                  </details>
+                </li>
+              }
+            </ul>
+          }
+        } @else if (turn.error) {
+          <p class="error">{{ turn.error }}</p>
+        } @else {
+          <p class="muted">Thinking… (the first answer can take a while while the model loads)</p>
+        }
+      </div>
+    }
+
+    <form (ngSubmit)="ask()">
+      <input name="question" [(ngModel)]="question" [disabled]="asking()"
+             placeholder="Ask a question about your documents" autocomplete="off" />
+      <button type="submit" [disabled]="asking() || !question.trim()">Ask</button>
+    </form>
+    @if (!hasIndexedDocuments()) {
+      <p class="muted small">No indexed documents yet — answers will say there is not enough information.</p>
+    }
+  </section>
+</main>
