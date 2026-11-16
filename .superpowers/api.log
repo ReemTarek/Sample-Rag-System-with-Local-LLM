@@ -12,24 +12,4 @@ info: MiniRag.Api.Services.VectorIndexInitializer[0]
 info: MiniRag.Api.Services.VectorIndexInitializer[0]
       Qdrant collection documents ready with 0 indexed document(s)
 info: MiniRag.Api.Services.DocumentIndexingService[0]
-      Indexed contoso-handbook.pdf: 3 page(s), 3 chunk(s) in 12365 ms
-info: MiniRag.Api.Services.RagService[0]
-      Retrieved 3 chunk(s) for "How many vacation days do employees get per year?": scores [0.868, 0.709, 0.485]
-info: MiniRag.Api.Services.RagService[0]
-      Answered in 23186 ms (embed+search 8818 ms, chat 14368 ms)
-info: MiniRag.Api.Services.RagService[0]
-      Retrieved 3 chunk(s) for "What is the home office equipment stipend?": scores [0.667, 0.499, 0.436]
-info: MiniRag.Api.Services.RagService[0]
-      Answered in 1771 ms (embed+search 1211 ms, chat 560 ms)
-info: MiniRag.Api.Services.RagService[0]
-      Retrieved 3 chunk(s) for "Who founded the company and where?": scores [0.701, 0.501, 0.420]
-info: MiniRag.Api.Services.RagService[0]
-      Answered in 6716 ms (embed+search 5764 ms, chat 952 ms)
-info: MiniRag.Api.Services.RagService[0]
-      Retrieved 3 chunk(s) for "What is the CEO's favourite football team?": scores [0.510, 0.488, 0.462]
-info: MiniRag.Api.Services.RagService[0]
-      Answered in 2882 ms (embed+search 95 ms, chat 2787 ms)
-info: MiniRag.Api.Services.RagService[0]
-      Retrieved 0 chunk(s) for "How many vacation days do employees get per year?": scores []
-info: MiniRag.Api.Services.RagService[0]
-      No chunk above MinScore 0.45; answering without the LLM
+      Indexed contoso-handbook.pdf: 3 page(s), 3 chunk(s) in 1564 ms
