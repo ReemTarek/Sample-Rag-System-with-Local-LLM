@@ -31,7 +31,8 @@ Write-Host "  embedding dimension: $($h.ollama.embeddingDimension)"
 
 Write-Host "`n== Upload and index"
 $null = & curl.exe -s -o NUL -X DELETE "$Api/api/documents/none"   # no-op, proves DELETE route is reachable
-$upload = & curl.exe -s -w "`n%{http_code}" -F "file=@$Sample" "$Api/api/documents"
+$name = "e2e-$([guid]::NewGuid().ToString("N").Substring(0,8)).pdf"   # unique name so other indexed documents cannot interfere
+$upload = & curl.exe -s -w "`n%{http_code}" -F "file=@$Sample;filename=$name" "$Api/api/documents"
 $code = ($upload -split "`n")[-1]; $doc = ($upload -split "`n")[0] | ConvertFrom-Json
 Check "upload accepted (202)" ($code -eq "202")
 $deadline = (Get-Date).AddMinutes(3)
@@ -43,7 +44,7 @@ Write-Host "  chunks: $($doc.chunkCount)"
 Write-Host "`n== Answerable questions"
 $r = Ask "How many vacation days do employees get per year?"
 Check "answer mentions 27" ($r.answer -match "27")
-Check "cites handbook page 3" (@($r.citations | Where-Object { $_.pageNumber -eq 3 -and $_.documentName -eq "contoso-handbook.pdf" }).Count -ge 1)
+Check "cites handbook page 3" (@($r.citations | Where-Object { $_.pageNumber -eq 3 -and $_.documentName -eq $name }).Count -ge 1)
 
 $r = Ask "What is the home office equipment stipend?"
 Check "answer mentions 450" ($r.answer -match "450")
@@ -73,7 +74,7 @@ Write-Host "`n== Delete"
 $status = & curl.exe -s -o NUL -w "%{http_code}" -X DELETE "$Api/api/documents/$($doc.id)"
 Check "delete returns 204" ($status -eq "204") "got $status"
 $r = Ask "How many vacation days do employees get per year?"
-Check "after delete the answer is insufficient (no documents)" ($r.insufficientContext -eq $true)
+Check "deleted document is no longer cited" (@($r.citations | Where-Object { $_.documentName -eq $name }).Count -eq 0)
 
 if ($failures -gt 0) { Write-Host "`n$failures check(s) FAILED" -ForegroundColor Red; exit 1 }
 Write-Host "`nAll checks passed" -ForegroundColor Green
