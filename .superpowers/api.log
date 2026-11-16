@@ -1,0 +1,13 @@
+Using launch settings from D:\Study\.Net\Mini Rag Ollama\backend\MiniRag.Api\Properties\launchSettings.json...
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5080
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: D:\Study\.Net\Mini Rag Ollama\backend\MiniRag.Api
+info: MiniRag.Api.Services.VectorIndexInitializer[0]
+      Embedding model nomic-embed-text produces 768-dimensional vectors
+info: MiniRag.Api.Services.VectorIndexInitializer[0]
+      Qdrant collection documents ready with 0 indexed document(s)
